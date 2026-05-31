@@ -1,0 +1,36 @@
+name: Missing package
+description: A wolfejam PyPI package that should be on the showcase but isn't.
+title: "[missing] <package-name>"
+labels: ["missing-package"]
+body:
+  - type: input
+    id: pypi-url
+    attributes:
+      label: PyPI URL
+      description: Direct link to the package on pypi.org
+      placeholder: https://pypi.org/project/<name>/
+    validations:
+      required: true
+
+  - type: input
+    id: published
+    attributes:
+      label: First published (approx)
+      description: Roughly when the package was first uploaded to PyPI
+      placeholder: 2026-05-30
+
+  - type: textarea
+    id: role
+    attributes:
+      label: Suggested role line
+      description: One sentence describing what the package is. Keep it under 90 chars.
+
+  - type: checkboxes
+    id: confirm
+    attributes:
+      label: Pre-flight
+      options:
+        - label: I've checked that the package author/owner is `wolfejam` on PyPI.
+          required: true
+        - label: I've checked that the package isn't already on https://pypi.faf.one (sometimes a cron run is overdue).
+          required: true

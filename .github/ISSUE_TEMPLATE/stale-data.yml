@@ -1,0 +1,57 @@
+name: Stale data
+description: A number on the showcase is wrong (version, downloads, role).
+title: "[stale] <package-name> · <field>"
+labels: ["stale-data"]
+body:
+  - type: input
+    id: package
+    attributes:
+      label: Package name
+      placeholder: claude-fafm-sdk
+    validations:
+      required: true
+
+  - type: dropdown
+    id: field
+    attributes:
+      label: Which number / field is stale
+      options:
+        - version
+        - total downloads
+        - weekly downloads
+        - role line
+        - badge
+        - other
+    validations:
+      required: true
+
+  - type: input
+    id: shown
+    attributes:
+      label: Value shown on pypi.faf.one
+      placeholder: v0.4.0 / 660 total / 450/wk
+    validations:
+      required: true
+
+  - type: input
+    id: expected
+    attributes:
+      label: Expected value (with source)
+      placeholder: v0.5.1 — see https://pypi.org/project/claude-fafm-sdk/0.5.1/
+    validations:
+      required: true
+
+  - type: input
+    id: footer-timestamp
+    attributes:
+      label: Footer timestamp at time of report
+      description: From the bottom of pypi.faf.one — "Auto-discovered from … · refreshed YYYY-MM-DD"
+      placeholder: 2026-05-31
+
+  - type: checkboxes
+    id: confirm
+    attributes:
+      label: Pre-flight
+      options:
+        - label: I checked that the next daily cron hasn't already corrected this.
+          required: true

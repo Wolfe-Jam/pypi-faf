@@ -1,0 +1,48 @@
+cff-version: 1.2.0
+type: software
+message: "pypi-faf is a discovery showcase for the FAF Python ecosystem. If you cite work shown here, please cite the two papers in `references` below — they formalize the standards the showcased packages implement."
+title: "pypi-faf — Discovery showcase for the FAF Python ecosystem"
+authors:
+  - family-names: Wolfe
+    given-names: James
+    orcid: "https://orcid.org/0009-0007-0801-3841"
+    affiliation: "FAF Foundation"
+license: MIT
+repository-code: "https://github.com/Wolfe-Jam/pypi-faf"
+url: "https://pypi.faf.one"
+keywords:
+  - .faf
+  - .fafm
+  - PyPI
+  - IANA-registered
+  - AI context
+  - portable AI memory
+  - showcase
+  - namepoint
+references:
+  - type: article
+    title: "Format-Driven AI Context Architecture: The .faf Standard for Persistent Project Understanding"
+    authors:
+      - family-names: Wolfe
+        given-names: James
+        orcid: "https://orcid.org/0009-0007-0801-3841"
+        affiliation: "FAF Foundation"
+    year: 2025
+    month: 11
+    doi: 10.5281/zenodo.18251362
+    url: "https://doi.org/10.5281/zenodo.18251362"
+    publisher:
+      name: "Zenodo"
+  - type: article
+    title: "Permanent Memory and Instant Recall: The .fafm Standard for Multi-Profile AI Agent Memory"
+    authors:
+      - family-names: Wolfe
+        given-names: James
+        orcid: "https://orcid.org/0009-0007-0801-3841"
+        affiliation: "FAF Foundation"
+    year: 2026
+    month: 5
+    doi: 10.5281/zenodo.20348942
+    url: "https://doi.org/10.5281/zenodo.20348942"
+    publisher:
+      name: "Zenodo"

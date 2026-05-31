@@ -1,0 +1,43 @@
+name: Refresh pypi.faf.one
+
+on:
+  schedule:
+    - cron: "0 4 * * *"  # daily 04:00 UTC
+  push:
+    branches: [main]
+    paths:
+      - "build/**"
+      - "templates/**"
+      - "packages.yml"
+      - ".github/workflows/refresh.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup uv
+        uses: astral-sh/setup-uv@v3
+
+      - name: Sync deps
+        run: uv sync
+
+      - name: Render docs/index.html
+        run: uv run python build/render.py
+
+      - name: Commit if changed
+        run: |
+          git config user.name "pypi-faf-bot"
+          git config user.email "bot@faf.one"
+          if [ -n "$(git status --porcelain docs/)" ]; then
+            git add docs/index.html
+            git commit -m "chore: refresh docs/index.html ($(date -u +%Y-%m-%d))"
+            git push
+          else
+            echo "no changes"
+          fi

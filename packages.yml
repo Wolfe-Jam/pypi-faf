@@ -1,0 +1,35 @@
+# Curated overlay for FAF packages on PyPI.
+# Auto-discovery from pypi.org/user/wolfejam/ fills the rest; this file
+# lets us add Zenodo DOIs, override the role text, or flag special status.
+#
+# Schema (all fields optional except `name`):
+#   - name:       PyPI package name (matches the slug)
+#     role:       One-line description (overrides PyPI summary)
+#     zenodo:     DOI URL for the paper this package implements
+#     badge:      Short uppercase tag shown next to the name (e.g. "100% RECENT")
+#     pinned:     True = show in the first rank regardless of download order
+#
+# Order in the rendered page = total-downloads desc, except pinned packages first.
+
+packages:
+  - name: claude-fafm-sdk
+    role: "Claude .fafm SDK — multi-profile AI agent memory, offline-first."
+    zenodo: "https://doi.org/10.5281/zenodo.20348942"
+    badge: "VELOCITY LEADER"
+    pinned: true
+
+  - name: gemini-faf-mcp
+    role: "Persistent project context for Google Gemini — MCP server, IANA-registered .faf format."
+    zenodo: "https://doi.org/10.5281/zenodo.18251362"
+
+  - name: grok-faf-voice
+    role: "LiveKit + Grok voice SDK with .fafm voice-memory profile (VML)."
+
+  - name: faf-python-sdk
+    role: "The Python SDK for .faf — parse, score, validate from any Python project."
+
+  - name: faf-agent-mcp
+    role: "Voice of FAF — MCP server for agent voice profiles."
+
+  - name: slash-tokens
+    role: "Pre-flight publish checks. npm live · Python coming soon."

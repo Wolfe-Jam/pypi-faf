@@ -1,0 +1,39 @@
+name: Curation edit
+description: Propose a change to packages.yml — role line, Zenodo DOI, badge, or pin.
+title: "[curation] <package-name>"
+labels: ["curation"]
+body:
+  - type: input
+    id: package
+    attributes:
+      label: Package name
+      placeholder: claude-fafm-sdk
+    validations:
+      required: true
+
+  - type: dropdown
+    id: field
+    attributes:
+      label: Field to change
+      options:
+        - role (one-line description)
+        - zenodo (DOI URL)
+        - badge (UPPERCASE TAG)
+        - pinned (boolean — show above download-order sort)
+        - other
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposed
+    attributes:
+      label: Proposed value
+      description: The new value. For role lines, under 90 chars.
+    validations:
+      required: true
+
+  - type: textarea
+    id: rationale
+    attributes:
+      label: Why
+      description: One or two sentences. What does this change clarify or correct?
