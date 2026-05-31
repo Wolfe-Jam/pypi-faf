@@ -23,6 +23,7 @@ from jinja2 import Environment, FileSystemLoader, select_autoescape
 ROOT = Path(__file__).resolve().parent.parent
 TEMPLATES = ROOT / "templates"
 OUT = ROOT / "docs" / "index.html"
+SITEMAP = ROOT / "docs" / "sitemap.xml"
 OVERLAY = ROOT / "packages.yml"
 HWM_FILE = ROOT / "build" / "last-totals.json"
 
@@ -190,6 +191,22 @@ def render(records: list[dict]) -> str:
     )
 
 
+def write_sitemap() -> None:
+    """Single-URL sitemap; lastmod tracks today so crawlers know to recheck."""
+    today = date.today().isoformat()
+    SITEMAP.write_text(
+        '<?xml version="1.0" encoding="UTF-8"?>\n'
+        '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
+        '  <url>\n'
+        '    <loc>https://pypi.faf.one/</loc>\n'
+        f'    <lastmod>{today}</lastmod>\n'
+        '    <changefreq>daily</changefreq>\n'
+        '    <priority>1.0</priority>\n'
+        '  </url>\n'
+        '</urlset>\n'
+    )
+
+
 def main() -> None:
     hwm = load_hwm()
     with httpx.Client(headers={"User-Agent": USER_AGENT}, timeout=30.0) as client:
@@ -197,8 +214,10 @@ def main() -> None:
     html = render(records)
     OUT.write_text(html)
     save_hwm(hwm)
+    write_sitemap()
     print(f"  ✓ wrote {OUT.relative_to(ROOT)} ({len(records)} packages)")
     print(f"  ✓ updated {HWM_FILE.relative_to(ROOT)} ({len(hwm)} HWMs)")
+    print(f"  ✓ wrote {SITEMAP.relative_to(ROOT)}")
 
 
 if __name__ == "__main__":
