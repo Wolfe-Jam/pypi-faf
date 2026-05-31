@@ -20,7 +20,10 @@
   :root{
     --bg:#0a0a0a; --panel:#141414; --line:#262626;
     --ink:#f5f5f5; --dim:#a3a3a3;
-    --orange:#FF6B35; --cyan:#00D4D4; --green:#00BF63;
+    --orange:#FF6B35;       /* FAF brand */
+    --cyan:#00D4D4;         /* FAF brand */
+    --green:#FFD43B;        /* Python rich yellow — the subtle PyPI nod (was FAF green #00BF63) */
+    --python-blue:#3776AB;  /* Python brand — for uvx command accents only */
     --mono:ui-monospace,"Roboto Mono",monospace;
   }
   *{box-sizing:border-box}
@@ -81,12 +84,11 @@
   <header>
     <span class="pill">{{ total_packages }} packages · 2 IANA media types · 2 Zenodo papers</span>
     <h1>FAF on <span class="accent">PyPI</span>.</h1>
-    <p class="lede">{{ total_packages }} packages. One IANA-registered family.
-      Two implement Zenodo papers. <strong>uvx and go.</strong></p>
+    <p class="lede">Persistent Context and Permanent Memory for PyPi devs.</p>
     <div class="cta">
       <a class="btn primary" href="https://pypi.org/user/wolfejam/">All on PyPI</a>
       <a class="btn" href="https://github.com/Wolfe-Jam">GitHub</a>
-      <code style="color:var(--dim)">uvx claude-fafm-sdk init</code>
+      <code style="color:var(--python-blue);font-weight:500">uvx claude-fafm-sdk init</code>
     </div>
   </header>
 
