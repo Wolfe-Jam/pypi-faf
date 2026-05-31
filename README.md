@@ -54,6 +54,10 @@ Part of the **subdomain sovereignty** family: every `X.faf.one` is its own thing
 - **grok.faf.one** ← its own CF Worker
 - **pypi.faf.one** ← this repo (dedicated subdomain-serving repo, `<subdomain>-faf` naming)
 
+## Credits
+
+- **Python logo** (`docs/python-logo.svg`) — © Python Software Foundation, [www.python.org](https://www.python.org), licensed under the GPL via [Wikimedia Commons](https://commons.wikimedia.org/w/index.php?curid=34991651). Used here for factual reference per the PSF Trademark Usage Policy.
+
 ## License
 
-MIT
+MIT (code + page content). The Python logo retains its own license — see Credits above.

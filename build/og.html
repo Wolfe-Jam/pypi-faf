@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{width:1200px;height:630px;overflow:hidden}
+  body{
+    background:#0a0a0a;
+    color:#f5f5f5;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,sans-serif;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:space-between;
+    padding:54px 64px;
+  }
+  /* Top: kicker + title */
+  .top{text-align:center}
+  .pill{
+    display:inline-block;
+    font-family:ui-monospace,"Roboto Mono",monospace;
+    font-size:18px;
+    color:#3776AB;
+    border:1px solid #262626;
+    border-radius:999px;
+    padding:6px 16px;
+    margin-bottom:18px;
+    letter-spacing:.02em;
+  }
+  h1{
+    font-size:84px;
+    font-weight:800;
+    letter-spacing:-.02em;
+    line-height:1;
+  }
+  h1 .accent{color:#FF6B35}
+  /* Middle: 3 logos */
+  .row{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:34px;
+    width:100%;
+  }
+  .mark{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:10px;
+    width:200px;
+  }
+  .mark img,.mark svg{display:block}
+  .mark .badge{
+    font-family:ui-monospace,"Roboto Mono",monospace;
+    font-size:14px;
+    letter-spacing:.10em;
+    text-transform:uppercase;
+    color:#a3a3a3;
+    font-weight:600;
+  }
+  .mark .name{
+    font-size:24px;
+    font-weight:700;
+    color:#f5f5f5;
+  }
+  .mark.center .name{font-size:54px;font-weight:800;letter-spacing:-.02em}
+  .mark.center .name .py{color:#3776AB}
+  .mark.center .name .pi{color:#FFD43B}
+  .mark.center .badge{color:#3776AB}
+  /* Arrows */
+  .arrow{
+    font-family:ui-monospace,"Roboto Mono",monospace;
+    font-size:64px;
+    color:#FFD43B;
+    font-weight:300;
+    line-height:1;
+    margin-top:-22px;
+  }
+  /* Bottom: slogan + url */
+  .bottom{text-align:center}
+  .slogan{
+    font-size:30px;
+    font-weight:500;
+    color:#f5f5f5;
+    margin-bottom:10px;
+    line-height:1.25;
+  }
+  .url{
+    font-family:ui-monospace,"Roboto Mono",monospace;
+    font-size:22px;
+    color:#FFD43B;
+    font-weight:600;
+  }
+</style>
+</head>
+<body>
+
+  <div class="top">
+    <span class="pill">6 packages · 2 IANA media types · 2 Zenodo papers</span>
+    <h1>FAF on <span class="accent">PyPI</span>.</h1>
+  </div>
+
+  <div class="row">
+    <div class="mark">
+      <img src="../docs/orange-smiley.svg" width="160" height="160" alt="dot-faf">
+      <div class="name">.faf</div>
+      <div class="badge">Context</div>
+    </div>
+
+    <div class="arrow">→</div>
+
+    <div class="mark">
+      <img src="../docs/python-logo.svg" width="160" height="160" alt="PyPI">
+      <div class="name">PyPI</div>
+      <div class="badge">where it lives</div>
+    </div>
+
+    <div class="arrow">←</div>
+
+    <div class="mark">
+      <img src="../docs/nelly-mark.png" width="160" height="160" alt="nelly">
+      <div class="name">.fafm</div>
+      <div class="badge">Memory</div>
+    </div>
+  </div>
+
+  <div class="bottom">
+    <div class="slogan">Persistent <span style="color:#FF6B35">Context</span> + Permanent <span style="color:#FF6B35">Memory</span>.</div>
+    <div class="url">pypi.faf.one</div>
+  </div>
+
+</body>
+</html>
