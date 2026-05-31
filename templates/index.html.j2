@@ -22,8 +22,8 @@
     --ink:#f5f5f5; --dim:#a3a3a3;
     --orange:#FF6B35;       /* FAF brand */
     --cyan:#00D4D4;         /* FAF brand */
-    --green:#FFD43B;        /* Python rich yellow — the subtle PyPI nod (was FAF green #00BF63) */
-    --python-blue:#3776AB;  /* Python brand — for uvx command accents only */
+    --py-yellow:#FFD43B;    /* Python rich yellow — for ACTION (uvx commands) */
+    --py-blue:#3776AB;      /* Python brand blue — for AUTHORITY (IANA/Zenodo receipts) */
     --mono:ui-monospace,"Roboto Mono",monospace;
   }
   *{box-sizing:border-box}
@@ -34,7 +34,8 @@
   a:hover{text-decoration:underline}
   code,pre{font-family:var(--mono)}
   pre{background:var(--panel);border:1px solid var(--line);border-radius:10px;
-    padding:14px 16px;overflow:auto;font-size:13px;margin:8px 0 0}
+    padding:14px 16px;overflow:auto;font-size:13px;margin:8px 0 0;
+    color:var(--py-yellow);font-weight:500}
   .pill{display:inline-block;font-family:var(--mono);font-size:12px;color:var(--cyan);
     border:1px solid var(--line);border-radius:999px;padding:4px 12px;margin-bottom:22px}
   .receipts-strip{display:grid;gap:12px;grid-template-columns:repeat(4,1fr);margin:0 0 8px}
@@ -44,7 +45,7 @@
     color:var(--cyan);margin:0 0 6px;font-weight:600}
   .receipt .what{font-size:15px;font-weight:600;color:var(--ink);margin:0 0 4px}
   .receipt .ref{font-family:var(--mono);font-size:12px;color:var(--dim);margin:0}
-  .receipt a{color:var(--green)}
+  .receipt a{color:var(--py-blue)}
   header{padding:88px 0 32px}
   h1{font-size:52px;line-height:1.05;font-weight:800;margin:0 0 16px;letter-spacing:-.02em}
   h1 .accent{color:var(--orange)}
@@ -71,7 +72,7 @@
   .pkg-role{margin:4px 0 8px}
   .pkg-stats{font-family:var(--mono);font-size:13px;color:var(--dim);margin:0 0 6px}
   .pkg-stats b{color:var(--orange);font-weight:600}
-  .pkg-stats .zenodo{margin-left:8px;color:var(--green)}
+  .pkg-stats .zenodo{margin-left:8px;color:var(--py-blue)}
   footer{padding:48px 0 72px;color:var(--dim);font-size:14px}
   footer a{margin-right:18px}
   footer .meta{margin-top:14px;font-family:var(--mono);font-size:12px}
@@ -88,7 +89,7 @@
     <div class="cta">
       <a class="btn primary" href="https://pypi.org/user/wolfejam/">All on PyPI</a>
       <a class="btn" href="https://github.com/Wolfe-Jam">GitHub</a>
-      <code style="color:var(--python-blue);font-weight:500">uvx claude-fafm-sdk init</code>
+      <code style="color:var(--py-yellow);font-weight:500">uvx claude-fafm-sdk init</code>
     </div>
   </header>
 
