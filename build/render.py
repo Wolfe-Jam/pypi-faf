@@ -9,6 +9,7 @@ Run: uv run python build/render.py
 
 from __future__ import annotations
 
+import json
 import re
 import sys
 import time
@@ -23,6 +24,7 @@ ROOT = Path(__file__).resolve().parent.parent
 TEMPLATES = ROOT / "templates"
 OUT = ROOT / "docs" / "index.html"
 OVERLAY = ROOT / "packages.yml"
+HWM_FILE = ROOT / "build" / "last-totals.json"
 
 PYPI_USER = "wolfejam"
 USER_AGENT = "pypi-faf-renderer/0.1 (+https://pypi.faf.one)"
@@ -79,7 +81,24 @@ def load_overlay() -> dict[str, dict]:
     return {p["name"]: p for p in data.get("packages", [])}
 
 
-def build_records(client: httpx.Client) -> list[dict]:
+def load_hwm() -> dict[str, int]:
+    """High-water marks: the last-known maximum total for each package.
+
+    pypistats /overall has a ~180-day data window; once a package crosses that
+    threshold, its earliest downloads silently fall off the sum, causing the
+    "total" to decrease over time. The displayed total is max(current, HWM) so
+    the visible number is monotonic by construction — never goes down.
+    """
+    if not HWM_FILE.exists():
+        return {}
+    return json.loads(HWM_FILE.read_text())
+
+
+def save_hwm(hwm: dict[str, int]) -> None:
+    HWM_FILE.write_text(json.dumps(hwm, indent=2, sort_keys=True) + "\n")
+
+
+def build_records(client: httpx.Client, hwm: dict[str, int]) -> list[dict]:
     discovered = discover_packages(client)
     overlay = load_overlay()
     overlay_names = set(overlay.keys())
@@ -91,6 +110,9 @@ def build_records(client: httpx.Client) -> list[dict]:
 
     names = sorted(set(discovered) | overlay_names)
     records = []
+    pending_hwm: dict[str, int] = {}   # only commit if the render passes the validity threshold
+    invalid_count = 0
+
     for i, name in enumerate(names):
         if i > 0:
             time.sleep(PYPISTATS_DELAY)
@@ -98,6 +120,26 @@ def build_records(client: httpx.Client) -> list[dict]:
         meta = fetch_pypi_meta(client, name)
         stats = fetch_stats(client, name)
         cur = overlay.get(name, {})
+
+        # Monotonic-total guarantee. Doctrine (wolfejam 2026-05-31):
+        # totals NEVER go down. A miscounted lower-or-zero figure is INVALID,
+        # not "natural data window shedding." Show the high-water mark and
+        # refuse to elevate HWM on invalid input.
+        fresh_total = stats["total"]
+        last_known = hwm.get(name, 0)
+        if last_known > 0 and fresh_total < last_known:
+            print(
+                f"  ✗ {name}: INVALID — pypistats returned {fresh_total}, HWM is {last_known}. "
+                f"Refused; displaying HWM (delta {last_known - fresh_total}).",
+                file=sys.stderr,
+            )
+            displayed_total = last_known
+            invalid_count += 1
+        else:
+            displayed_total = fresh_total
+            if fresh_total > last_known:
+                pending_hwm[name] = fresh_total  # promote HWM only on valid increase
+
         records.append({
             "name": name,
             "version": meta["version"],
@@ -105,9 +147,25 @@ def build_records(client: httpx.Client) -> list[dict]:
             "zenodo": cur.get("zenodo"),
             "badge": cur.get("badge"),
             "pinned": bool(cur.get("pinned")),
-            "total": stats["total"],
+            "total": displayed_total,
             "weekly": stats["weekly"],
         })
+
+    # Refuse-on-majority-invalid: if more than half the packages returned
+    # invalid totals in one run, that's an API outage / bad-data event, not
+    # natural drift. Refuse to write — last-good docs/index.html stays in
+    # place, footer date stops moving, the staleness becomes visible.
+    if invalid_count > len(records) // 2:
+        print(
+            f"\n✗ FATAL: {invalid_count}/{len(records)} packages returned INVALID totals "
+            f"in one run. Likely pypistats outage or schema change. Refusing to write a "
+            f"new docs/index.html — last-good stays live; footer date will show staleness.",
+            file=sys.stderr,
+        )
+        sys.exit(3)
+
+    # All clear — commit pending HWM updates.
+    hwm.update(pending_hwm)
 
     # Sort: pinned first, then by total desc.
     records.sort(key=lambda r: (not r["pinned"], -r["total"]))
@@ -133,11 +191,14 @@ def render(records: list[dict]) -> str:
 
 
 def main() -> None:
+    hwm = load_hwm()
     with httpx.Client(headers={"User-Agent": USER_AGENT}, timeout=30.0) as client:
-        records = build_records(client)
+        records = build_records(client, hwm)
     html = render(records)
     OUT.write_text(html)
+    save_hwm(hwm)
     print(f"  ✓ wrote {OUT.relative_to(ROOT)} ({len(records)} packages)")
+    print(f"  ✓ updated {HWM_FILE.relative_to(ROOT)} ({len(hwm)} HWMs)")
 
 
 if __name__ == "__main__":

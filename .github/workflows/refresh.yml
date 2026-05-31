@@ -34,8 +34,10 @@ jobs:
         run: |
           git config user.name "pypi-faf-bot"
           git config user.email "bot@faf.one"
-          if [ -n "$(git status --porcelain docs/)" ]; then
-            git add docs/index.html
+          # Commit BOTH the regenerated page and the updated high-water-mark
+          # file. last-totals.json is the auditable floor — never decreases.
+          if [ -n "$(git status --porcelain docs/index.html build/last-totals.json)" ]; then
+            git add docs/index.html build/last-totals.json
             git commit -m "chore: refresh docs/index.html ($(date -u +%Y-%m-%d))"
             git push
           else

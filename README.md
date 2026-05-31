@@ -35,6 +35,17 @@ open docs/index.html
 
 Auto-discovery surfaces any new package not yet in `packages.yml` as a build-log warning; the package still renders (PyPI summary becomes the role text) so new releases never block the site.
 
+## Numbers guarantee
+
+Totals are **monotonic** — historical download counts never go down. Every package has a per-package floor stored in `build/last-totals.json` (auditable, gitted, history visible in `git log`):
+
+- Each render: compare pypistats' fresh total to the stored floor.
+- If `fresh >= floor` → display fresh, raise the floor.
+- If `fresh < floor` → display the floor, **refuse to lower it**. Treat the low value as invalid (pypistats `/overall` has a ~180-day window — old downloads silently fall off the sum as packages age).
+- If **more than half** the packages return invalid totals in one run → refuse to overwrite `docs/index.html`. The last-good page stays live and the footer date stops advancing, surfacing the staleness visibly.
+
+The floor file (`build/last-totals.json`) is the authoritative record. Anyone can `git log build/last-totals.json` and verify that no displayed total has ever decreased.
+
 ## Doctrine
 
 Part of the **subdomain sovereignty** family: every `X.faf.one` is its own thing — own repo, own CF/GH Pages project, own brand. Companions:
