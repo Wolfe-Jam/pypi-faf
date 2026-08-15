@@ -29,7 +29,8 @@ packages:
     role: "The Python SDK for .faf — parse, score, validate from any Python project."
 
   - name: faf-agent-mcp
-    role: "Voice of FAF — MCP server for agent voice profiles."
+    role: "Voice of FAF — MCP server for the IANA-registered .fafa agent card."
+    zenodo: "https://doi.org/10.5281/zenodo.21951641"
 
   - name: slash-tokens
     role: "Pre-flight publish checks. npm live · Python coming soon."
