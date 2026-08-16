@@ -1,8 +1,8 @@
 {
-  "claude-fafm-sdk": 2055,
+  "claude-fafm-sdk": 2184,
   "faf-agent-mcp": 833,
-  "faf-python-sdk": 2200,
-  "gemini-faf-mcp": 3691,
-  "grok-faf-voice": 1103,
-  "slash-tokens": 437
+  "faf-python-sdk": 2224,
+  "gemini-faf-mcp": 3716,
+  "grok-faf-voice": 1104,
+  "slash-tokens": 439
 }
