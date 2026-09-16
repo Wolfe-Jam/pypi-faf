@@ -35,7 +35,7 @@ open docs/index.html
 
 Auto-discovery surfaces any new package not yet in `packages.yml` as a build-log warning; the package still renders (PyPI summary becomes the role text) so new releases never block the site.
 
-## Numbers guarantee
+## Numbers never go down
 
 Totals are **monotonic** — historical download counts never go down. Every package has a per-package floor stored in `build/last-totals.json` (auditable, gitted, history visible in `git log`):
 
