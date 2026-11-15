@@ -37,14 +37,12 @@ Auto-discovery surfaces any new package not yet in `packages.yml` as a build-log
 
 ## Numbers never go down
 
-Totals are **monotonic** — historical download counts never go down. Every package has a per-package floor stored in `build/last-totals.json` (auditable, gitted, history visible in `git log`):
+pypistats only keeps about 180 days of daily downloads, so its sum stops being an all-time total once a package is older than that. Each package's all-time total lives in `build/baseline.json` instead (gitted, history visible in `git log`):
 
-- Each render: compare pypistats' fresh total to the stored floor.
-- If `fresh >= floor` → display fresh, raise the floor.
-- If `fresh < floor` → display the floor, **refuse to lower it**. Treat the low value as invalid (pypistats `/overall` has a ~180-day window — old downloads silently fall off the sum as packages age).
-- If **more than half** the packages return invalid totals in one run → refuse to overwrite `docs/index.html`. The last-good page stays live and the footer date stops advancing, surfacing the staleness visibly.
-
-The floor file (`build/last-totals.json`) is the authoritative record. Anyone can `git log build/last-totals.json` and verify that no displayed total has ever decreased.
+- Each render adds pypistats' downloads for the days after the baseline's `through` date, and the result becomes the next baseline. Days leaving the pypistats window no longer matter.
+- The first baselines (through 2026-11-14) were counted from the public PyPI dataset on BigQuery, with pypistats' own mirror rule: `build/seed.sql`.
+- A baseline older than 170 days refuses to run: days may have left the window. Reseed it with `build/seed.sql`.
+- If **more than half** the packages return no daily rows in one run → refuse to overwrite `docs/index.html`. The last-good page stays live and the footer date stops advancing, surfacing the staleness visibly.
 
 ## Doctrine
 

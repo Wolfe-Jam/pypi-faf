@@ -6,6 +6,10 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) · Versioning: 
 
 ## [Unreleased]
 
+### Fixed
+- Totals are all-time again. pypistats keeps about 180 days, so as packages aged their oldest downloads left its sum; the old floor then froze below the true totals, and from 2026-11-13 the refresh failed daily (5 of 6 totals "went down"). Now each total is a baseline plus the days after it (`build/baseline.json`), seeded through 2026-11-14 from the public PyPI dataset on BigQuery with pypistats' mirror rule (`build/seed.sql`). gemini-faf-mcp 6,392 → 7,837 and faf-python-sdk 3,218 → 4,133 were the largest corrections.
+- Unit tests for the baseline step; the refresh runs them before rendering.
+
 ## [0.1.0] — 2026-05-31
 
 ### Added

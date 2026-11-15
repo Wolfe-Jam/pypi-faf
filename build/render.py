@@ -25,10 +25,14 @@ TEMPLATES = ROOT / "templates"
 OUT = ROOT / "docs" / "index.html"
 SITEMAP = ROOT / "docs" / "sitemap.xml"
 OVERLAY = ROOT / "packages.yml"
-HWM_FILE = ROOT / "build" / "last-totals.json"
+BASELINE_FILE = ROOT / "build" / "baseline.json"
 
 PYPI_USER = "wolfejam"
 USER_AGENT = "pypi-faf-renderer/0.1 (+https://pypi.faf.one)"
+
+# pypistats keeps ~180 days of daily rows. A baseline older than this many days
+# may have days that already fell out of the window: refuse rather than undercount.
+MAX_BASELINE_AGE_DAYS = 170
 
 # pypistats rate-limits aggressively. Pace between calls + retry with backoff.
 PYPISTATS_DELAY = 2.0           # seconds between successful calls
@@ -55,7 +59,7 @@ def fetch_pypi_meta(client: httpx.Client, pkg: str) -> dict:
 
 
 def fetch_stats(client: httpx.Client, pkg: str) -> dict:
-    """Total + last-7d downloads, without_mirrors only. Retries 429 with backoff."""
+    """Daily rows + last-7d downloads, without_mirrors only. Retries 429 with backoff."""
     url = f"https://pypistats.org/api/packages/{pkg}/overall"
     for attempt in range(len(PYPISTATS_BACKOFF) + 1):
         if attempt > 0:
@@ -67,10 +71,10 @@ def fetch_stats(client: httpx.Client, pkg: str) -> dict:
             continue
         r.raise_for_status()
         rows = [row for row in r.json().get("data", []) if row.get("category") == "without_mirrors"]
-        total = sum(row["downloads"] for row in rows)
+        days = {row["date"]: row["downloads"] for row in rows}
         cutoff = (date.today() - timedelta(days=8)).isoformat()
-        weekly = sum(row["downloads"] for row in rows if row.get("date", "") >= cutoff)
-        return {"total": total, "weekly": weekly}
+        weekly = sum(n for d, n in days.items() if d >= cutoff)
+        return {"days": days, "weekly": weekly}
     print(f"  ! pypistats 429 for {pkg} after {len(PYPISTATS_BACKOFF)} retries — loud-fail, refuse zero", file=sys.stderr)
     sys.exit(2)
 
@@ -82,24 +86,48 @@ def load_overlay() -> dict[str, dict]:
     return {p["name"]: p for p in data.get("packages", [])}
 
 
-def load_hwm() -> dict[str, int]:
-    """High-water marks: the last-known maximum total for each package.
+class BaselineError(Exception):
+    pass
 
-    pypistats /overall has a ~180-day data window; once a package crosses that
-    threshold, its earliest downloads silently fall off the sum, causing the
-    "total" to decrease over time. The displayed total is max(current, HWM) so
-    the visible number is monotonic by construction — never goes down.
+
+def load_baselines() -> dict[str, dict]:
+    """Per package: {"total": all-time downloads, "through": last day counted}.
+
+    pypistats /overall only keeps ~180 days, so its sum is not an all-time
+    total once a package is older than that. The all-time total is kept here
+    instead: baseline + the days after it, and the result becomes the next
+    baseline. The first baselines (through 2026-11-14) were counted from the
+    public PyPI dataset on BigQuery with pypistats' own mirror rule (see
+    build/seed.sql).
     """
-    if not HWM_FILE.exists():
+    if not BASELINE_FILE.exists():
         return {}
-    return json.loads(HWM_FILE.read_text())
+    return json.loads(BASELINE_FILE.read_text())
 
 
-def save_hwm(hwm: dict[str, int]) -> None:
-    HWM_FILE.write_text(json.dumps(hwm, indent=2, sort_keys=True) + "\n")
+def save_baselines(baselines: dict[str, dict]) -> None:
+    BASELINE_FILE.write_text(json.dumps(baselines, indent=2, sort_keys=True) + "\n")
 
 
-def build_records(client: httpx.Client, hwm: dict[str, int]) -> list[dict]:
+def advance(base: dict | None, days: dict[str, int], today: date) -> dict:
+    """Add the days after base["through"] to base["total"]; return the new baseline."""
+    if base is None:
+        # New package: its whole history is still inside the pypistats window.
+        if not days:
+            return {"total": 0, "through": (today - timedelta(days=1)).isoformat()}
+        return {"total": sum(days.values()), "through": max(days)}
+    through = base["through"]
+    age = (today - date.fromisoformat(through)).days
+    if age > MAX_BASELINE_AGE_DAYS:
+        raise BaselineError(
+            f"baseline is {age} days old (through {through}); days may have left the "
+            f"pypistats window. Reseed from BigQuery (build/seed.sql)."
+        )
+    new = sum(n for d, n in days.items() if d > through)
+    return {"total": base["total"] + new, "through": max([through, *days])}
+
+
+def build_records(client: httpx.Client, baselines: dict[str, dict]) -> list[dict]:
     discovered = discover_packages(client)
     overlay = load_overlay()
     overlay_names = set(overlay.keys())
@@ -111,8 +139,8 @@ def build_records(client: httpx.Client, hwm: dict[str, int]) -> list[dict]:
 
     names = sorted(set(discovered) | overlay_names)
     records = []
-    pending_hwm: dict[str, int] = {}   # only commit if the render passes the validity threshold
-    invalid_count = 0
+    pending: dict[str, dict] = {}   # only saved if the whole run passes
+    empty = 0
 
     for i, name in enumerate(names):
         if i > 0:
@@ -122,24 +150,16 @@ def build_records(client: httpx.Client, hwm: dict[str, int]) -> list[dict]:
         stats = fetch_stats(client, name)
         cur = overlay.get(name, {})
 
-        # Monotonic-total guarantee. Doctrine (wolfejam 2026-05-31):
-        # totals NEVER go down. A miscounted lower-or-zero figure is INVALID,
-        # not "natural data window shedding." Show the high-water mark and
-        # refuse to elevate HWM on invalid input.
-        fresh_total = stats["total"]
-        last_known = hwm.get(name, 0)
-        if last_known > 0 and fresh_total < last_known:
-            print(
-                f"  ✗ {name}: INVALID — pypistats returned {fresh_total}, HWM is {last_known}. "
-                f"Refused; displaying HWM (delta {last_known - fresh_total}).",
-                file=sys.stderr,
-            )
-            displayed_total = last_known
-            invalid_count += 1
-        else:
-            displayed_total = fresh_total
-            if fresh_total > last_known:
-                pending_hwm[name] = fresh_total  # promote HWM only on valid increase
+        if not stats["days"]:
+            empty += 1
+        if name not in baselines:
+            print(f"  ! {name}: no baseline; counting from pypistats' window. "
+                  f"If it is older than ~180 days, seed it from BigQuery.", file=sys.stderr)
+        try:
+            pending[name] = advance(baselines.get(name), stats["days"], date.today())
+        except BaselineError as e:
+            print(f"\n✗ FATAL: {name}: {e}", file=sys.stderr)
+            sys.exit(3)
 
         records.append({
             "name": name,
@@ -148,25 +168,23 @@ def build_records(client: httpx.Client, hwm: dict[str, int]) -> list[dict]:
             "zenodo": cur.get("zenodo"),
             "badge": cur.get("badge"),
             "pinned": bool(cur.get("pinned")),
-            "total": displayed_total,
+            "total": pending[name]["total"],
             "weekly": stats["weekly"],
         })
 
-    # Refuse-on-majority-invalid: if more than half the packages returned
-    # invalid totals in one run, that's an API outage / bad-data event, not
-    # natural drift. Refuse to write — last-good docs/index.html stays in
-    # place, footer date stops moving, the staleness becomes visible.
-    if invalid_count > len(records) // 2:
+    # No daily rows for most packages at once = a pypistats outage or schema
+    # change, not a quiet week. Refuse to write: the last-good page stays live
+    # and the footer date stops moving, so the staleness shows.
+    if empty > len(records) // 2:
         print(
-            f"\n✗ FATAL: {invalid_count}/{len(records)} packages returned INVALID totals "
-            f"in one run. Likely pypistats outage or schema change. Refusing to write a "
-            f"new docs/index.html — last-good stays live; footer date will show staleness.",
+            f"\n✗ FATAL: {empty}/{len(records)} packages returned no daily rows. "
+            f"Likely pypistats outage or schema change. Refusing to write a new "
+            f"docs/index.html — last-good stays live; footer date will show staleness.",
             file=sys.stderr,
         )
         sys.exit(3)
 
-    # All clear — commit pending HWM updates.
-    hwm.update(pending_hwm)
+    baselines.update(pending)
 
     # Sort: pinned first, then by total desc.
     records.sort(key=lambda r: (not r["pinned"], -r["total"]))
@@ -208,15 +226,15 @@ def write_sitemap() -> None:
 
 
 def main() -> None:
-    hwm = load_hwm()
+    baselines = load_baselines()
     with httpx.Client(headers={"User-Agent": USER_AGENT}, timeout=30.0) as client:
-        records = build_records(client, hwm)
+        records = build_records(client, baselines)
     html = render(records)
     OUT.write_text(html)
-    save_hwm(hwm)
+    save_baselines(baselines)
     write_sitemap()
     print(f"  ✓ wrote {OUT.relative_to(ROOT)} ({len(records)} packages)")
-    print(f"  ✓ updated {HWM_FILE.relative_to(ROOT)} ({len(hwm)} HWMs)")
+    print(f"  ✓ updated {BASELINE_FILE.relative_to(ROOT)} ({len(baselines)} baselines)")
     print(f"  ✓ wrote {SITEMAP.relative_to(ROOT)}")
 
 

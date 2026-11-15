@@ -27,6 +27,9 @@ jobs:
       - name: Sync deps
         run: uv sync
 
+      - name: Test
+        run: uv run python -m unittest discover -s tests
+
       - name: Render docs/index.html
         run: uv run python build/render.py
 
@@ -34,10 +37,10 @@ jobs:
         run: |
           git config user.name "pypi-faf-bot"
           git config user.email "bot@faf.one"
-          # Commit the regenerated page, the high-water-mark file (auditable
-          # floor — never decreases), and the sitemap (lastmod tracks today).
-          if [ -n "$(git status --porcelain docs/index.html docs/sitemap.xml build/last-totals.json)" ]; then
-            git add docs/index.html docs/sitemap.xml build/last-totals.json
+          # Commit the regenerated page, the baselines (all-time totals,
+          # auditable in git log), and the sitemap (lastmod tracks today).
+          if [ -n "$(git status --porcelain docs/index.html docs/sitemap.xml build/baseline.json)" ]; then
+            git add docs/index.html docs/sitemap.xml build/baseline.json
             git commit -m "chore: refresh docs/index.html ($(date -u +%Y-%m-%d))"
             git push
           else
