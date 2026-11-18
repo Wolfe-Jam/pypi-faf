@@ -1,23 +1,23 @@
 {
   "claude-fafm-sdk": {
-    "through": "2026-11-16",
-    "total": 3278
+    "through": "2026-11-17",
+    "total": 3314
   },
   "faf-agent-mcp": {
-    "through": "2026-11-16",
-    "total": 1050
+    "through": "2026-11-17",
+    "total": 1051
   },
   "faf-python-sdk": {
-    "through": "2026-11-16",
-    "total": 4165
+    "through": "2026-11-17",
+    "total": 4197
   },
   "gemini-faf-mcp": {
-    "through": "2026-11-16",
-    "total": 8003
+    "through": "2026-11-17",
+    "total": 8107
   },
   "grok-faf-voice": {
-    "through": "2026-11-16",
-    "total": 1673
+    "through": "2026-11-17",
+    "total": 1674
   },
   "slash-tokens": {
     "through": "2026-11-15",
